@@ -31,18 +31,15 @@ namespace HellowWpfApp
             return records;
         }
 
-        void exportSagawa(String outPath, SagawaCVS sagawa)
+        void exportSagawa(String outPath, List<SagawaCVS> sagawa)
         {
-            List<SagawaCVS> list = new List<SagawaCVS>();
-            list.Add(sagawa);
-
             using (StreamWriter textWriter = new StreamWriter(outPath, false, Encoding.GetEncoding(932)))
             using (CsvWriter csvWriter = new CsvWriter(textWriter))
             {
                 csvWriter.Configuration.RegisterClassMap<SagawaCSVMapper>();
                 csvWriter.Configuration.HasHeaderRecord = false;
                 csvWriter.Configuration.Encoding = Encoding.GetEncoding(932);
-                csvWriter.WriteRecords(list);
+                csvWriter.WriteRecords(sagawa);
             }
         }
 
@@ -64,23 +61,25 @@ namespace HellowWpfApp
 
                 int errorNum = 0;
 
+                List<SagawaCVS> list = new List<SagawaCVS>();
+
                 foreach (var record in records)
                 {
                     var t = new Translator(record);
-                    var sagawa = t.toSagawa();
+                    list.Add(t.toSagawa());
+                }
 
-                    var name = record.orderName1 + record.orderName2 + record.invoiceString;
+                try
+                {
+                    var record = list[0];
+                    var name = record.clientName1;
                     var newPath = Path.Combine(dir, name);
                     newPath = Path.ChangeExtension(newPath, "csv");
-
-                    try
-                    {
-                        exportSagawa(newPath, sagawa);
-                    }
-                    catch
-                    {
-                        errorNum += 1;
-                    }
+                    exportSagawa(newPath, list);
+                }
+                catch
+                {
+                    errorNum += 1;
                 }
 
                 if (errorNum != 0)
